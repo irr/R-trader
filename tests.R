@@ -1,0 +1,24 @@
+conn <- dbConnect("SQLite", dbname = "/home/irocha/Books/trading/data/symbols.db")
+query <- dbSendQuery(conn, statement = "SELECT D, O, H, L, C from symbols where S = 'UOLL4'")
+trader <- fetch(query)
+dim((trader))
+dbHasCompleted(query)
+hlc <- data.frame(trader[3], trader[4], trader[5])
+names(hlc) <- c("High", "Low", "Close")
+ema <- EMA(trader[5], 7)[1:14]
+atr <- ATR(hlc, 7)[,2][1:14]
+env <- BBands(hlc, 7)[1:14]
+adx <- ADX(hlc, 7)[1:14]
+rsi <- RSI(hlc[3], 7)[1:14]
+stk <- stoch(hlc, 7)[1:14]
+ohlc <- data.frame(trader[2], trader[3], trader[4], trader[5])
+names(ohlc) <- c("Open", "High", "Low", "Close")
+data <- xts(ohlc, order.by=as.Date(trader[,1], "%Y-%m-%d"))
+dbClearResult(query)
+dbDisconnect(conn)
+candleChart(data, multi.col=TRUE,theme="white")
+
+
+
+
+
