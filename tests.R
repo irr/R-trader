@@ -9,7 +9,7 @@ dbDisconnect(conn)
 hlc <- data.frame(trader[3], trader[4], trader[5])
 names(hlc) <- c("High", "Low", "Close")
 
-# Exponential moving average
+ # Exponential moving average
 # http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
 ema <- EMA(trader[5])
 
@@ -25,15 +25,7 @@ env <- BBands(hlc)
 
 # STARC Bands
 # http://www.investopedia.com/terms/s/starc.asp
-# Best alternative to Bollinger Bands
-#    def STARCBands(self, tag, n, factor=1.0):
-#        atr = self.ATR(n)
-#        ma = self.EMA(tag, n)
-#        up, dn = [], []
-#        for i in range(len(sma)):
-#            up.append((ma[i] + (atr[i] * factor)) if atr[i] > 0 else atr[i])
-#            dn.append((ma[i] - (atr[i] * factor)) if atr[i] > 0 else atr[i])
-#        return (atr, ma, dn, up)
+stc <- data.frame(ema - abs(atr), ema + abs(atr))
 
 # Average Directional Index
 # http://en.wikipedia.org/wiki/Average_Directional_Index
