@@ -5,14 +5,56 @@ dim(trader)
 dbHasCompleted(query)
 dbClearResult(query)
 dbDisconnect(conn)
+
 hlc <- data.frame(trader[3], trader[4], trader[5])
 names(hlc) <- c("High", "Low", "Close")
-ema <- EMA(trader[5], 7)[1:14]
-atr <- ATR(hlc, 7)[,2][1:14]
-env <- BBands(hlc, 7)[1:14]
-adx <- ADX(hlc, 7)[1:14]
-rsi <- RSI(hlc[3], 7)[1:14]
-stk <- stoch(hlc, 7)[1:14]
+
+# Exponential moving average
+# http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
+ema <- EMA(trader[5])
+
+# Average True Range
+# http://en.wikipedia.org/wiki/Average_True_Range
+atr <- ATR(hlc)[,2]
+
+# Bollinger Bands
+# http://en.wikipedia.org/wiki/Bollinger_bands
+# http://www.investopedia.com/articles/technical/102201.asp
+# http://www.investopedia.com/articles/trading/05/022205.asp
+env <- BBands(hlc)
+
+# STARC Bands
+# http://www.investopedia.com/terms/s/starc.asp
+# Best alternative to Bollinger Bands
+#    def STARCBands(self, tag, n, factor=1.0):
+#        atr = self.ATR(n)
+#        ma = self.EMA(tag, n)
+#        up, dn = [], []
+#        for i in range(len(sma)):
+#            up.append((ma[i] + (atr[i] * factor)) if atr[i] > 0 else atr[i])
+#            dn.append((ma[i] - (atr[i] * factor)) if atr[i] > 0 else atr[i])
+#        return (atr, ma, dn, up)
+
+# Average Directional Index
+# http://en.wikipedia.org/wiki/Average_Directional_Index
+# http://www.investopedia.com/articles/trading/07/adx-trend-indicator.asp
+# 00 -  25  Absent or Weak Trend
+# 25 -  50  Strong Trend
+# 50 -  75  Very Strong Trend
+# 75 - 100  Extremely Strong Trend
+adx <- ADX(hlc)
+
+# Relative Strength Index
+# http://en.wikipedia.org/wiki/Relative_Strength_Index
+# http://www.investopedia.com/articles/technical/071601.asp
+# The 30/70 on our scale represents the oversold/overbought positions
+rsi <- RSI(hlc[3])
+
+# Stochastic Oscillator 20/80
+# http://en.wikipedia.org/wiki/Stochastic_oscillator
+# http://www.investopedia.com/terms/s/stochasticoscillator.asp
+stk <- stoch(hlc)
+
 ohlc <- data.frame(trader[2], trader[3], trader[4], trader[5], trader[6])
 names(ohlc) <- c("Open", "High", "Low", "Close", "Volume")
 data <- xts(ohlc, order.by=as.Date(trader[,1], "%Y-%m-%d"))
