@@ -9,7 +9,7 @@ dbDisconnect(conn)
 hlc <- data.frame(trader[3], trader[4], trader[5])
 names(hlc) <- c("High", "Low", "Close")
 
- # Exponential moving average
+# Exponential moving average
 # http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
 ema <- EMA(trader[5])
 
