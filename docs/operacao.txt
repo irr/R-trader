@@ -95,9 +95,15 @@ Obs.: 1. Hit Rate =/= Rentabilidade
 
   InitialStop := 0; 
 
-7) Cuidados!
-    calcula Stop Inicial Ajustado p/ efeitos de Pos Sizing do TradeSim -- compensa efeito do slippage no gap de abertura }
-    { Faz position sizing assumindo entrada ao preco de fechamento do candle anterior }
-    { SIAjustado = StopInicial + (PrecoEntradaReal(Abertura do dia seguinte)
-                               - PrecoEntradaPlanejado(Fechamento do dia anterior ou disparo))}
-    SIAjustado := StopInicial + (PrecoEntrada - Ref(C,-1)); 
+7) Cuidados relacionados a simulacao (TradeSim)
+ 1. Ao enviar o stop inicial para o TradeSim 
+ (calcula Stop Inicial Ajustado p/ efeitos de Pos Sizing do TradeSim -- compensa efeito do slippage no gap de abertura)
+ { Faz position sizing assumindo entrada ao preco de fechamento do candle anterior }
+ { SIAjustado = StopInicial + (PrecoEntradaReal(Abertura do dia seguinte)
+                             - PrecoEntradaPlanejado(Fechamento do dia anterior ou disparo))}
+ SIAjustado := StopInicial + (PrecoEntrada - Ref(C,-1)); 
+
+ 2. Ao enviar preco com slippage
+ { Define Initial Stop p/ efeitos de Pos.Sizing -- compensa efeito do slippage }
+ InitialStop:=FmlVar("OC Ind - Curso2 Cap7 Sist3","SIAjustado")
+              + (EntryPrice - FmlVar("OC Ind - Curso2 Cap7 Sist3", "PrecoEntrada")); 
