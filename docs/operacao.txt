@@ -1,3 +1,5 @@
+CURSO 2:
+
 Indicadores Avancados
 
 1)Velocidade e aceleracao de medias moveis
@@ -72,7 +74,30 @@ Obs.: 1. Hit Rate =/= Rentabilidade
 
 4) Ideias de Stop
   1. VBO - Volatility Breakout Stop
-    - Colocar um stop de 1 ATR abaixo do fechamento (junto com o trailing stop de ATR relativo a minima) para no caso de queda brusca sair antes
-    (e colocado na ordem somente o menor)
+    - Colocar um stop de 1 ATR abaixo do fechamento (e colocado na ordem somente o menor)
+    (junto com o trailing stop de ATR relativo a minima) para no caso de queda brusca sair antes
   2. MAE (Maximum Adverse Excursion)
     - Manter o trailing stop de acordo com a media do MAE
+
+5) TradeSim
+  - Limitacao: Nao existe o conceito de risco zero, ou seja, voce fica em "lock" durante um trade
+  (em referencia ao controle de risco)
+  - Formato aberto: .trt (basta exportar que o TradeSim ordena)
+
+6) MetaStock
+  EntryTrigger := Ref(FmlVar("OC Ind - Regr Entr Cap7 Sist1","de"),-1);
+  EntryPrice := O;
+  --> Entrou (ontem) preco de abertura
+
+  ExitTrigger := Ref(FmlVar("OC Ind - Regr Entr Cap7 Sist1","ds"),-1);
+  ExitPrice := O;
+  --> Sai no preco de abertura
+
+  InitialStop := 0; 
+
+7) Cuidados!
+    calcula Stop Inicial Ajustado p/ efeitos de Pos Sizing do TradeSim -- compensa efeito do slippage no gap de abertura }
+    { Faz position sizing assumindo entrada ao preco de fechamento do candle anterior }
+    { SIAjustado = StopInicial + (PrecoEntradaReal(Abertura do dia seguinte)
+                               - PrecoEntradaPlanejado(Fechamento do dia anterior ou disparo))}
+    SIAjustado := StopInicial + (PrecoEntrada - Ref(C,-1)); 
