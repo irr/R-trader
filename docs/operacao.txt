@@ -107,3 +107,10 @@ Obs.: 1. Hit Rate =/= Rentabilidade
  { Define Initial Stop p/ efeitos de Pos.Sizing -- compensa efeito do slippage }
  InitialStop:=FmlVar("OC Ind - Curso2 Cap7 Sist3","SIAjustado")
               + (EntryPrice - FmlVar("OC Ind - Curso2 Cap7 Sist3", "PrecoEntrada")); 
+
+8) Dica para congestao
+  1. Para operar em congestao
+    - VIDYA + StopGain (Env. ATR) + Oscilador em sobrevendido
+    - Sair com Oscilador em sobrecomprado
+  2. Opcao para ligar com tendencia
+    - Entrar em congestao e esperar rompimento
