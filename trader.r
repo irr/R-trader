@@ -14,8 +14,16 @@ gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") {
   } else if (end != "") {
     cond <- paste("and D <= '", end, "'", sep="")
   }
-  inner <- paste("select D from symbols", where, cond, "order by D desc", limit, sep= " ")
-  outer <- paste("select D, O, H, L, C, V from symbols where D in (", inner, ") and S = '", symbol, "' order by D asc", sep="")
+  inner <- paste("select D from symbols",
+                 where, cond,
+                 "order by D desc",
+                 limit, sep= " ")
+  outer <- paste("select D, O, H, L, C, V from symbols where D in (",
+                 inner,
+                 ") and S = '",
+                 symbol,
+                 "' order by D asc",
+                 sep="")
   query <- dbSendQuery(conn, statement=outer)
   results <- fetch(query, n=-1)
   dbHasCompleted(query)
@@ -42,8 +50,8 @@ gplot <- function(x) {
 }
 
 gsb <- function(data, n=21) { # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
-  ema <- EMA(data$C, n) # Exponential moving average: http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
-  atr <- ATR(ghlc(data), n)[,2] # Average True Range: http://en.wikipedia.org/wiki/Average_True_Range
+  ema <- EMA(data$C, n) # http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
+  atr <- ATR(ghlc(data), n)[,2] # http://en.wikipedia.org/wiki/Average_True_Range
   sb <- data.frame(ema - abs(atr), ema + abs(atr))
   names(sb) <- c("Min", "Max")
   return(sb)
