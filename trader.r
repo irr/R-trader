@@ -49,10 +49,31 @@ gplot <- function(x) {
   candleChart(x, multi.col=TRUE, theme="white")
 }
 
+vplot <- function(data, v) {
+  return(xts(v, order.by=as.Date(data[,1], "%Y-%m-%d")))
+}
+
 gsb <- function(data, n=21) { # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
   ema <- EMA(data$C, n) # http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
   atr <- ATR(ghlc(data), n)[,2] # http://en.wikipedia.org/wiki/Average_True_Range
   sb <- data.frame(ema - abs(atr), ema + abs(atr))
   names(sb) <- c("Min", "Max")
   return(sb)
+}
+
+addSBMin <- function(data, n=21) {
+  sb <- gsb(data, n)
+  SBMin <- vplot(data, sb$Min)
+  addTA(SBMin, on=1)
+}
+
+addSBMax <- function(data, n=21) {
+  sb <- gsb(data, n)
+  SBMax <- vplot(d, sb$Max)
+  addTA(SBMax, on=1)
+}
+
+test <- function() {
+  d <- gs("UOLL4", limit=30)
+  gplot(gxts(d))
 }
