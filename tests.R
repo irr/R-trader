@@ -1,4 +1,4 @@
-conn <- dbConnect("SQLite", dbname = "/home/irocha/Books/trading/data/symbols.db")
+conn <- dbConnect("SQLite", dbname = "./data/symbols.db")
 query <- dbSendQuery(conn, statement = "SELECT D, O, H, L, C, V from symbols where S = 'UOLL4'")
 trader <- fetch(query, n = -1)
 dim(trader)
@@ -51,7 +51,6 @@ ohlc <- data.frame(trader[2], trader[3], trader[4], trader[5], trader[6])
 names(ohlc) <- c("Open", "High", "Low", "Close", "Volume")
 data <- xts(ohlc, order.by=as.Date(trader[,1], "%Y-%m-%d"))
 candleChart(data[1320:1357,], multi.col=TRUE,theme="white")
-
 
 
 
