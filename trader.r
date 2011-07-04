@@ -1,16 +1,22 @@
-gs <- function(symbol, dbname="./data/symbols.db", begin="", end="") {
+t <- function() {
+  source("trader.r")
+}
+
+gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") {
   conn <- dbConnect("SQLite", dbname)
-  sql1 <- "SELECT D, O, H, L, C, V from symbols where S = '"
-  sql2 <- " ORDER BY D ASC"
+  where <- paste("where S ='", symbol, "'", sep="")
+  limit <- ifelse(limit>0, paste(" limit ", limit, sep=""), "")
   cond <- ""
   if (begin != "" && end != "") {
-    cond <- paste(" AND D BETWEEN '", begin, "' AND '", end, "'", sep="")
+    cond <- paste("and D between '", begin, "' and '", end, "'", sep="")
   } else if (begin != "") {
-    cond <- paste(" AND D >= '", begin, "'", sep="")
+    cond <- paste("and D >= '", begin, "'", sep="")
   } else if (end != "") {
-    cond <- paste(" AND D <= '", end, "'", sep="")
+    cond <- paste("and D <= '", end, "'", sep="")
   }
-  query <- dbSendQuery(conn, statement=paste(sql1, symbol, "'", cond, sql2, sep=""))
+  inner <- paste("select D from symbols", where, cond, "order by D desc", limit, sep= " ")
+  outer <- paste("select D, O, H, L, C, V from symbols where D in (", inner, ") and S = '", symbol, "' order by D asc", sep="")
+  query <- dbSendQuery(conn, statement=outer)
   results <- fetch(query, n=-1)
   dbHasCompleted(query)
   dbClearResult(query)
@@ -32,7 +38,7 @@ gxts <- function(data) {
 }
 
 gplot <- function(x) {
-  candleChart(x, multi.col=TRUE,theme="white")
+  candleChart(x, multi.col=TRUE, theme="white")
 }
 
 gsb <- function(data, n=21) { # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
