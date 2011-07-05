@@ -26,7 +26,7 @@ gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") {
                  sep="")
   query <- dbSendQuery(conn, statement=outer)
   results <- fetch(query, n=-1)
-  dbHasCompleted(query)
+  stopifnot(dbHasCompleted(query))
   dbClearResult(query)
   dbDisconnect(conn)
   return(results)
