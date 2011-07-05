@@ -46,10 +46,11 @@ gxts <- function(data) {
 }
 
 gplot <- function(x) {
-  candleChart(x, multi.col=TRUE, theme="white")
+  Rtrader <- x
+  candleChart(Rtrader, multi.col=TRUE, theme="white")
 }
 
-vplot <- function(data, v) {
+gvplot <- function(data, v) {
   return(xts(v, order.by=as.Date(data[,1], "%Y-%m-%d")))
 }
 
@@ -61,17 +62,29 @@ gsb <- function(data, m=21, n=10, f=3) { # STARC Bands: http://www.investopedia.
   return(sb)
 }
 
+grsi <- function(data, n=10) { # RSI: http://www.investopedia.com/articles/technical/071601.asp
+  return(RSI(ghlc(data)$C, n)) # http://en.wikipedia.org/wiki/Relative_Strength_Index
+}
+
 addSB <- function(data, n=10) {
   sb <- gsb(data, n)
-  SBMin <- vplot(data, sb$Min)
-  SBMax <- vplot(data, sb$Max)
+  SBMin <- gvplot(data, sb$Min)
+  SBMax <- gvplot(data, sb$Max)
   plot(addTA(SBMin, on=1, col="blue"))
   plot(addTA(SBMax, on=1, col="blue"))
+  plot(addEMA(n=10,col="red"))
+  plot(addEMA(n=50,col="green"))
+}
+
+addRSI <- function(data, n=10) {
+  rsi <- gvplot(data, grsi(data, n)) # The 30/70 on our scale represents the oversold/overbought positions
+  plot(addTA(rsi, on=NA, col="blue"))
 }
 
 test <- function() {
-  db <<- gs("UOLL4")
+  db <<- gs("UOLL4", begin="2010-06-16")
   hlc <<- ghlc(db)
   gplot(gxts(db))
   addSB(db)
+  addRSI(db)
 }
