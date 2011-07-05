@@ -8,8 +8,8 @@ Mechanical Trading System using R
 
 Dependencies
 ------------
-- R
-- SQL data generated from Metastock data files
+- R (quantmod, RSQLite)
+- SQLite3
 
 Author
 ------
