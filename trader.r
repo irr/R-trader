@@ -66,6 +66,10 @@ grsi <- function(data, n=10) { # RSI: http://www.investopedia.com/articles/techn
   return(RSI(ghlc(data)$C, n)) # http://en.wikipedia.org/wiki/Relative_Strength_Index
 }
 
+gadx <- function(data, n=10) { # ADX: http://www.investopedia.com/articles/trading/07/adx-trend-indicator.asp
+  return(ADX(ghlc(data), n)[,4]) # http://en.wikipedia.org/wiki/Average_Directional_Index
+}
+
 addSB <- function(data, n=10) {
   sb <- gsb(data, n)
   SBMin <- gvplot(data, sb$Min)
@@ -81,10 +85,19 @@ addRSI <- function(data, n=10) {
   plot(addTA(rsi, on=NA, col="blue"))
 }
 
+addADX <- function(data, n=10) {
+  adx <- gvplot(data, gadx(data,n)) # Ref: 00 -  25  Absent or Weak Trend
+                                        #  25 -  50  Strong Trend
+                                        #  50 -  75  Very Strong Trend
+                                        #  75 - 100  Extremely Strong Trend
+  plot(addTA(adx, on=NA, col="blue"))
+}
+
 test <- function() {
   db <<- gs("UOLL4", begin="2010-06-16")
   hlc <<- ghlc(db)
   gplot(gxts(db))
   addSB(db)
   addRSI(db)
+  addADX(db)
 }
