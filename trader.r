@@ -53,27 +53,25 @@ vplot <- function(data, v) {
   return(xts(v, order.by=as.Date(data[,1], "%Y-%m-%d")))
 }
 
-gsb <- function(data, n=21) { # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
-  ema <- EMA(data$C, n) # http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
+gsb <- function(data, m=21, n=10, f=3) { # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
+  ema <- EMA(data$C, m) # http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
   atr <- ATR(ghlc(data), n)[,2] # http://en.wikipedia.org/wiki/Average_True_Range
-  sb <- data.frame(ema - abs(atr), ema + abs(atr))
+  sb <- data.frame(ema - f*abs(atr), ema + f*abs(atr))
   names(sb) <- c("Min", "Max")
   return(sb)
 }
 
-addSBMin <- function(data, n=21) {
+addSB <- function(data, n=10) {
   sb <- gsb(data, n)
   SBMin <- vplot(data, sb$Min)
-  addTA(SBMin, on=1)
-}
-
-addSBMax <- function(data, n=21) {
-  sb <- gsb(data, n)
-  SBMax <- vplot(d, sb$Max)
-  addTA(SBMax, on=1)
+  SBMax <- vplot(data, sb$Max)
+  plot(addTA(SBMin, on=1, col="blue"))
+  plot(addTA(SBMax, on=1, col="blue"))
 }
 
 test <- function() {
-  d <- gs("UOLL4", limit=30)
-  gplot(gxts(d))
+  db <<- gs("UOLL4")
+  hlc <<- ghlc(db)
+  gplot(gxts(db))
+  addSB(db)
 }
