@@ -6,6 +6,8 @@ r <- function() {
   remove(list=ls())
 }
 
+STK <- "PETR4"
+
 gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") {
   conn <- dbConnect("SQLite", dbname)
   where <- paste("where S ='", symbol, "'", sep="")
@@ -90,13 +92,13 @@ addADX <- function(data, n=10, ...) {
   plot(addTA(adx, ...))
 }
 
-read <- function(symbol) {
+read <- function(symbol = STK) {
   gdb <<- gs(symbol)
   ghc <<- ghlc(gdb)
   gxt <<- gxts(gdb)
 }
 
-test <- function(symbol) {
+test <- function(symbol = STK) {
   read(symbol)
   candleChart(gxt['2011-01::2011-06'], multi.col=TRUE, theme="white")
   addEMAS(gdb)
@@ -105,14 +107,16 @@ test <- function(symbol) {
   addADX(gdb, on=NA, col="blue")
 }
 
+                                        # TODO: Advanced Techniques
+                                        # to be studied...
                                         # http://www.r-bloggers.com/artificial-intelligence-in-trading-k-means-clustering/
-gkmeans <- function(symbol) {
+gkmeans <- function(symbol = STK) {
   read(symbol)
   x <- data.frame(d=index(Cl(gdb)),return=as.numeric(Delt(Cl(gdb))))
   ggplot(x,aes(return))+stat_density(colour="steelblue", size=2, fill=NA)+xlab(label='Daily returns')
 }
 
-gclplot <- function(symbol, n=15) {
+gclplot <- function(symbol = STK, n=15) {
   read(symbol)
   nasa <- tail(cbind(Delt(Op(gxt), Hi(gxt)), Delt(Op(gxt), Lo(gxt)), Delt(Op(gxt), Cl(gxt))), -1)
   wss <- (nrow(nasa)-1)*sum(apply(nasa,2,var))
@@ -121,7 +125,7 @@ gclplot <- function(symbol, n=15) {
   ggplot(wss,aes(number,value))+geom_point()+xlab("Number of Clusters")+ylab("Within groups sum of squares")+geom_smooth()
 }
 
-gcl <- function(symbol, n=5, max=10) {
+gcl <- function(symbol = STK, n=5, max=10) {
   read(symbol)
   nasa <- tail(cbind(Delt(Op(gxt),Hi(gxt)), Delt(Op(gxt), Lo(gxt)), Delt(Op(gxt), Cl(gxt))), -1)
   kmeanObject <- kmeans(nasa,n,iter.max=max)
