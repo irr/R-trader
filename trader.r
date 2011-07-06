@@ -41,63 +41,57 @@ ghlc <- function(data) {
 gxts <- function(data) {
   d <- data.frame(data[2], data[3], data[4], data[5], data[6])
   names(d) <- c("Open", "High", "Low", "Close", "Volume")
-  x <- xts(d, order.by=as.Date(data[,1], "%Y-%m-%d"))
-  return(x)
+  return(xts(d, order.by=as.Date(data[,1], "%Y-%m-%d")))
 }
 
-gplot <- function(x) {
-  Rtrader <- x
-  candleChart(Rtrader, multi.col=TRUE, theme="white")
-}
-
-gvplot <- function(data, v) {
+gta <- function(data, v) {
   return(xts(v, order.by=as.Date(data[,1], "%Y-%m-%d")))
 }
 
-gsb <- function(data, m=21, n=10, f=3) { # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
-  ema <- EMA(data$C, m) # http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
-  atr <- ATR(ghlc(data), n)[,2] # http://en.wikipedia.org/wiki/Average_True_Range
+addSB <- function(data, n=10, m=21, f=3, ...) {
+                                        # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
+                                        # ATR: http://en.wikipedia.org/wiki/Average_True_Range
+  ema <- EMA(data$C, m)
+  atr <- ATR(ghlc(data), n)[,2]
   sb <- data.frame(ema - f*abs(atr), ema + f*abs(atr))
   names(sb) <- c("Min", "Max")
-  return(sb)
+  SBMin <- gta(data, sb$Min)
+  SBMax <- gta(data, sb$Max)
+  plot(addTA(SBMin, ...))
+  plot(addTA(SBMax, ...))
 }
 
-grsi <- function(data, n=10) { # RSI: http://www.investopedia.com/articles/technical/071601.asp
-  return(RSI(ghlc(data)$C, n)) # http://en.wikipedia.org/wiki/Relative_Strength_Index
+addEMAS <- function(data, n=10, colors=c("red", "violet"), ...) {
+                                        # EMA: http://en.wikipedia.org/wiki/Exponential_moving_average#Exponential_moving_average
+  plot(addEMA(n, col=colors[1]))
+  plot(addEMA(n*5, col=colors[2]))
 }
 
-gadx <- function(data, n=10) { # ADX: http://www.investopedia.com/articles/trading/07/adx-trend-indicator.asp
-  return(ADX(ghlc(data), n)[,4]) # http://en.wikipedia.org/wiki/Average_Directional_Index
+addRSI <- function(data, n=10, ...) {
+                                        # RSI: http://www.investopedia.com/articles/technical/071601.asp
+                                        # http://en.wikipedia.org/wiki/Relative_Strength_Index
+                                        # The 30/70 on our scale represents the oversold/overbought positions
+  rsi <- gta(data, RSI(data$C, n))
+  plot(addTA(rsi, ...))
 }
 
-addSB <- function(data, n=10) {
-  sb <- gsb(data, n)
-  SBMin <- gvplot(data, sb$Min)
-  SBMax <- gvplot(data, sb$Max)
-  plot(addTA(SBMin, on=1, col="blue"))
-  plot(addTA(SBMax, on=1, col="blue"))
-  plot(addEMA(n=10,col="red"))
-  plot(addEMA(n=50,col="green"))
-}
-
-addRSI <- function(data, n=10) {
-  rsi <- gvplot(data, grsi(data, n)) # The 30/70 on our scale represents the oversold/overbought positions
-  plot(addTA(rsi, on=NA, col="blue"))
-}
-
-addADX <- function(data, n=10) {
-  adx <- gvplot(data, gadx(data,n)) # Ref: 00 -  25  Absent or Weak Trend
+addADX <- function(data, n=10, ...) {
+                                        # ADX: http://www.investopedia.com/articles/trading/07/adx-trend-indicator.asp
+                                        # http://en.wikipedia.org/wiki/Average_Directional_Index
+                                        #  00 -  25  Absent or Weak Trend
                                         #  25 -  50  Strong Trend
                                         #  50 -  75  Very Strong Trend
                                         #  75 - 100  Extremely Strong Trend
-  plot(addTA(adx, on=NA, col="blue"))
+  adx <- gvplot(data, ADX(ghlc(data), n)[,4])
+  plot(addTA(adx, ...))
 }
 
 test <- function() {
   db <<- gs("UOLL4", begin="2010-06-16")
   hlc <<- ghlc(db)
-  gplot(gxts(db))
-  addSB(db)
-  addRSI(db)
-  addADX(db)
+  candleChart(gxts(db), multi.col=TRUE, theme="white")
+  addEMAS(db)
+  addSB(db, on=1, col="blue")
+  addRSI(db, on=NA, col="blue")
+  addADX(db, on=NA, col="blue")
 }
