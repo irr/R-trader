@@ -82,14 +82,14 @@ addADX <- function(data, n=10, ...) {
                                         #  25 -  50  Strong Trend
                                         #  50 -  75  Very Strong Trend
                                         #  75 - 100  Extremely Strong Trend
-  adx <- gvplot(data, ADX(ghlc(data), n)[,4])
+  adx <- gta(data, ADX(ghlc(data), n)[,4])
   plot(addTA(adx, ...))
 }
 
 test <- function() {
-  db <<- gs("UOLL4", begin="2010-06-16")
+  db <<- gs("UOLL4")
   hlc <<- ghlc(db)
-  candleChart(gxts(db), multi.col=TRUE, theme="white")
+  candleChart(gxts(db)['2011-01::2011-06'], multi.col=TRUE, theme="white")
   addEMAS(db)
   addSB(db, on=1, col="blue")
   addRSI(db, on=NA, col="blue")
