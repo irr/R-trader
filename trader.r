@@ -2,6 +2,10 @@ t <- function() {
   source("trader.r")
 }
 
+r <- function() {
+  remove(list=ls())
+}
+
 gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") {
   conn <- dbConnect("SQLite", dbname)
   where <- paste("where S ='", symbol, "'", sep="")
@@ -18,7 +22,7 @@ gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") {
                  where, cond,
                  "order by D desc",
                  limit, sep= " ")
-  outer <- paste("select D, O, H, L, C, V from symbols where D in (",
+  outer <- paste("select D as Date, O as Open, H as High, L as Low, C as Close, V as Volume from symbols where D in (",
                  inner,
                  ") and S = '",
                  symbol,
@@ -86,12 +90,50 @@ addADX <- function(data, n=10, ...) {
   plot(addTA(adx, ...))
 }
 
-test <- function() {
-  db <<- gs("UOLL4")
-  hlc <<- ghlc(db)
-  candleChart(gxts(db)['2011-01::2011-06'], multi.col=TRUE, theme="white")
-  addEMAS(db)
-  addSB(db, on=1, col="blue")
-  addRSI(db, on=NA, col="blue")
-  addADX(db, on=NA, col="blue")
+read <- function(symbol) {
+  gdb <<- gs(symbol)
+  ghc <<- ghlc(gdb)
+  gxt <<- gxts(gdb)
+}
+
+test <- function(symbol) {
+  read(symbol)
+  candleChart(gxt['2011-01::2011-06'], multi.col=TRUE, theme="white")
+  addEMAS(gdb)
+  addSB(gdb, on=1, col="blue")
+  addRSI(gdb, on=NA, col="blue")
+  addADX(gdb, on=NA, col="blue")
+}
+
+                                        # http://www.r-bloggers.com/artificial-intelligence-in-trading-k-means-clustering/
+gkmeans <- function(symbol) {
+  read(symbol)
+  x <- data.frame(d=index(Cl(gdb)),return=as.numeric(Delt(Cl(gdb))))
+  ggplot(x,aes(return))+stat_density(colour="steelblue", size=2, fill=NA)+xlab(label='Daily returns')
+}
+
+gclplot <- function(symbol, n=15) {
+  read(symbol)
+  nasa <- tail(cbind(Delt(Op(gxt), Hi(gxt)), Delt(Op(gxt), Lo(gxt)), Delt(Op(gxt), Cl(gxt))), -1)
+  wss <- (nrow(nasa)-1)*sum(apply(nasa,2,var))
+  for (i in 2:n) wss[i] = sum(kmeans(nasa, centers=i)$withinss)
+  wss <- (data.frame(number=1:n,value=as.numeric(wss)))
+  ggplot(wss,aes(number,value))+geom_point()+xlab("Number of Clusters")+ylab("Within groups sum of squares")+geom_smooth()
+}
+
+gcl <- function(symbol, n=5, max=10) {
+  read(symbol)
+  nasa <- tail(cbind(Delt(Op(gxt),Hi(gxt)), Delt(Op(gxt), Lo(gxt)), Delt(Op(gxt), Cl(gxt))), -1)
+  kmeanObject <- kmeans(nasa,n,iter.max=max)
+  print(kmeanObject$centers)
+  autocorrelation <- head(cbind(kmeanObject$cluster,lag(as.xts(kmeanObject$cluster),-1)),-1)
+  xtabs(~autocorrelation[,1]+(autocorrelation[,2]))
+  y <- apply(xtabs(~autocorrelation[,1]+(autocorrelation[,2])),1,sum)
+  x <- xtabs(~autocorrelation[,1]+(autocorrelation[,2]))
+  z <- x
+  for(i in 1:n)
+    {
+      z[i,] <- (x[i,]/y[i])
+    }
+  round(z,2)
 }

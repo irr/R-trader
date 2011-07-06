@@ -3,8 +3,10 @@ options(editor="emacs")
 options(pdfviewer="evince")
 
 .First <- function() {
-  library(quantmod)
-  library(RSQLite)
+  require(quantmod)
+  require(RSQLite)
+  require(ggplot2)
+  require(stats)
   setwd("/home/irocha/git/R-trader")
   source("trader.r")
 }
