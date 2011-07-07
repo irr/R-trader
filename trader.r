@@ -142,10 +142,10 @@ test <- function(symbol = STK, f=TRUE) {
   candleChart(gxt, multi.col=TRUE, theme="white")
   addEMAS(gdb)
   addSB(gdb, on=1, col="blue")
-  addVIDYA(gdb, on=NA, col="green")
   addRSI(gdb, on=NA, col="blue")
   addADX(gdb, on=NA, col="blue")
   addVA(gdb)
+  addVIDYA(gdb, on=NA, col="green")
 }
                                         # TODO: Advanced Techniques
                                         # to be studied...
