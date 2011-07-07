@@ -54,6 +54,45 @@ gta <- function(data, v) {
   return(xts(v, order.by=as.Date(data[,1], "%Y-%m-%d")))
 }
 
+gva <- function(data, n=21, dt=5, si=2) {
+  ema <- EMA(data$C, n)
+  vp <- rep(NA, length(ema))
+  ac <- rep(NA, length(ema))
+  for (i in (dt+1):length(ema)) {
+    vp[i] <- 100*(ema[i]-ema[i-dt])/ema[i-dt]
+    ac[i] <- vp[i] - vp[i-1]
+  }
+  mvp <- EMA(vp, si)
+  mac <- EMA(ac, si)
+  va <- data.frame(ema, mvp, mac)
+  names(va) <- c("MA","Ve", "Ac")
+  return(va)
+}
+
+gvidya <- function(data, n=9, sc=0.2) {
+  cmo <- CMO(data$C, n) / 100
+  vid <- rep(NA, length(cmo))
+  i <- n + 1
+  vid[i] <- data$C[i]*sc*abs(cmo[i])
+  for (j in (i+1):length(cmo)) {
+    vid[j] <- data$C[j]*sc*abs(cmo[j]) + vid[j-1]*(1-sc*abs(cmo[j]))
+  }
+  return(vid)
+}
+
+addVIDYA <- function(data, ...) {
+  Vidya <- gta(data, gvidya(data))
+  plot(addTA(Vidya, ...))
+}
+
+addVA <- function(data, colors=c("red", "blue"), ...) {
+  va <- gva(data, ...)
+  Ac <- gta(data, va$Ac)
+  Ve <- gta(data, va$Ve)
+  plot(addTA(Ac, on=NA, col=colors[1]))
+  plot(addTA(Ve, on=NA, col=colors[2]))
+}
+
 addSB <- function(data, n=10, m=21, f=3, ...) {
                                         # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
                                         # ATR: http://en.wikipedia.org/wiki/Average_True_Range
@@ -92,21 +131,22 @@ addADX <- function(data, n=10, ...) {
   plot(addTA(adx, ...))
 }
 
-read <- function(symbol = STK) {
-  gdb <<- gs(symbol)
+read <- function(symbol = STK, ...) {
+  gdb <<- gs(symbol, ...)
   ghc <<- ghlc(gdb)
   gxt <<- gxts(gdb)
 }
 
-test <- function(symbol = STK) {
-  read(symbol)
-  candleChart(gxt['2011-01::2011-06'], multi.col=TRUE, theme="white")
+test <- function(symbol = STK, f=TRUE) {
+  read(symbol, limit=180)
+  candleChart(gxt, multi.col=TRUE, theme="white")
   addEMAS(gdb)
   addSB(gdb, on=1, col="blue")
+  addVIDYA(gdb, on=NA, col="green")
   addRSI(gdb, on=NA, col="blue")
   addADX(gdb, on=NA, col="blue")
+  addVA(gdb)
 }
-
                                         # TODO: Advanced Techniques
                                         # to be studied...
                                         # http://www.r-bloggers.com/artificial-intelligence-in-trading-k-means-clustering/
