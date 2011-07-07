@@ -2,10 +2,6 @@ t <- function() {
   source("trader.r")
 }
 
-r <- function() {
-  remove(list=ls())
-}
-
 STK <- "PETR4"
 
 gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") {
@@ -38,29 +34,29 @@ gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") {
   return(results)
 }
 
-ghlc <- function(data) {
+HLC <- function(data) {
   d <- data.frame(data[3], data[4], data[5])
   names(d) <- c("High", "Low", "Close")
   return(d)
 }
 
-gxts <- function(data) {
+XTS <- function(data) {
   d <- data.frame(data[2], data[3], data[4], data[5], data[6])
   names(d) <- c("Open", "High", "Low", "Close", "Volume")
   return(xts(d, order.by=as.Date(data[,1], "%Y-%m-%d")))
 }
 
-gta <- function(data, v) {
+TA <- function(data, v) {
   return(xts(v, order.by=as.Date(data[,1], "%Y-%m-%d")))
 }
 
-gva <- function(data, n=21, dt=5, si=2) {
+VA <- function(data, n=21, dt=5, si=2) {
   ema <- EMA(data$C, n)
   vp <- rep(NA, length(ema))
   ac <- rep(NA, length(ema))
   for (i in (dt+1):length(ema)) {
     vp[i] <- 100*(ema[i]-ema[i-dt])/ema[i-dt]
-    ac[i] <- vp[i] - vp[i-1]
+    ac[i] <- vp[i]-vp[i-1]
   }
   mvp <- EMA(vp, si)
   mac <- EMA(ac, si)
@@ -69,8 +65,9 @@ gva <- function(data, n=21, dt=5, si=2) {
   return(va)
 }
 
-gvidya <- function(data, n=9, sc=0.2) {
-  cmo <- CMO(data$C, n) / 100
+VIDYA <- function(data, n=9) {
+  sc <- 2/(n+1)
+  cmo <- CMO(data$C, n)/100
   vid <- rep(NA, length(cmo))
   i <- n + 1
   vid[i] <- data$C[i]*sc*abs(cmo[i])
@@ -81,14 +78,14 @@ gvidya <- function(data, n=9, sc=0.2) {
 }
 
 addVIDYA <- function(data, ...) {
-  Vidya <- gta(data, gvidya(data))
+  Vidya <- TA(data, VIDYA(data))
   plot(addTA(Vidya, ...))
 }
 
 addVA <- function(data, colors=c("red", "blue"), ...) {
-  va <- gva(data, ...)
-  Ac <- gta(data, va$Ac)
-  Ve <- gta(data, va$Ve)
+  va <- VA(data, ...)
+  Ac <- TA(data, va$Ac)
+  Ve <- TA(data, va$Ve)
   plot(addTA(Ac, on=NA, col=colors[1]))
   plot(addTA(Ve, on=NA, col=colors[2]))
 }
@@ -97,11 +94,11 @@ addSB <- function(data, n=10, m=21, f=3, ...) {
                                         # STARC Bands: http://www.investopedia.com/terms/s/starc.asp
                                         # ATR: http://en.wikipedia.org/wiki/Average_True_Range
   ema <- EMA(data$C, m)
-  atr <- ATR(ghlc(data), n)[,2]
+  atr <- ATR(HLC(data), n)[,2]
   sb <- data.frame(ema - f*abs(atr), ema + f*abs(atr))
   names(sb) <- c("Min", "Max")
-  SBMin <- gta(data, sb$Min)
-  SBMax <- gta(data, sb$Max)
+  SBMin <- TA(data, sb$Min)
+  SBMax <- TA(data, sb$Max)
   plot(addTA(SBMin, ...))
   plot(addTA(SBMax, ...))
 }
@@ -116,7 +113,7 @@ addRSI <- function(data, n=10, ...) {
                                         # RSI: http://www.investopedia.com/articles/technical/071601.asp
                                         # http://en.wikipedia.org/wiki/Relative_Strength_Index
                                         # The 30/70 on our scale represents the oversold/overbought positions
-  rsi <- gta(data, RSI(data$C, n))
+  rsi <- TA(data, RSI(data$C, n))
   plot(addTA(rsi, ...))
 }
 
@@ -127,14 +124,14 @@ addADX <- function(data, n=10, ...) {
                                         #  25 -  50  Strong Trend
                                         #  50 -  75  Very Strong Trend
                                         #  75 - 100  Extremely Strong Trend
-  adx <- gta(data, ADX(ghlc(data), n)[,4])
+  adx <- TA(data, ADX(HLC(data), n)[,4])
   plot(addTA(adx, ...))
 }
 
 read <- function(symbol = STK, ...) {
   gdb <<- gs(symbol, ...)
-  ghc <<- ghlc(gdb)
-  gxt <<- gxts(gdb)
+  ghc <<- HLC(gdb)
+  gxt <<- XTS(gdb)
 }
 
 test <- function(symbol = STK, f=TRUE) {
@@ -143,7 +140,7 @@ test <- function(symbol = STK, f=TRUE) {
   addEMAS(gdb)
   addSB(gdb, on=1, col="blue")
   addRSI(gdb, on=NA, col="blue")
-  addADX(gdb, on=NA, col="blue")
+  addADX(gdb, on=NA, col="steelblue")
   addVA(gdb)
   addVIDYA(gdb, on=NA, col="green")
 }
