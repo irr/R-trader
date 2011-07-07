@@ -6,28 +6,6 @@ Indicadores Avancados
   - verificar se tendencia esta "saudavel"
   - melhor maneira de se verificar se a media esta subindo/descendo
 
-{ Dados de Entrada }
-plot:=Input("Plotar: [1]Velocidade [2]Aceleracao ",1,2,1);
-pds1:=Input("Periodo da MM: ",2,500,21);
-xpds:=Input("Delta de tempo: ",1,200,5);
-suav:=Input("Suaviz. do Ind: ",1,100,2);
-
-{ Variacao Percentual }
-MM:=mov(C,pds1,E);
-velocPer:=100*(MM-Ref(MM,-xpds))/Ref(MM,-xpds);
-acelPer:=velocPer-Ref(velocPer,-1);
-
-{ Suaviza indicadores }
-SuavVeloc:=mov(velocPer,suav,E);
-SuavAcel:=mov(acelPer,suav,E);
-
-{ Plota indicador }
-if(plot=1,SuavVeloc,SuavAcel);
-
-{ Plota linha horizontal em zero }
-0;
-
-
 2) Medias adaptativas
  - JMA, HMA, VIDYA (Variable Index Dynamic Average)* 
    - http://www.meta-formula.com/Metastock-Formulas-V.html#Vidya Explanation
@@ -35,27 +13,6 @@ if(plot=1,SuavVeloc,SuavAcel);
    - em congestao, fica horizontal/flat
    - divide "tendencias"
    - apos detectar congestao, utilizar oscilador para se posicionar (stoch, RSI)
-
-{ Parametros de entrada }
-periodo := Input("Periodo: ",1,200,20);
-fator := Input("Fator VIDYA: ",0.1,5,0.2);
-
-{ Calculo dos Parametros do VIDYA }
-v1 := stdev(C, periodo);
-v2 := hhv(v1, periodo);
-v3 := llv(v1, periodo);
-
-{ Calcula v4: }
-{   se v1=v2 (stdev esta no nivel maximo = expansao) => v4 := 1 }
-{   se v1=v3 (stdev esta no nivel minimo = congestao) => v4 := 0 }
-v4 := if((v2-v3)>0,(v1-v3)/(v2-v3),0);
-
-{ Calcula VIDYA }
-{   se v4=1, fator*v4 = 0.20 (valor default definido acima, q corresponde a uma MME de 9 periodos }
-vidya := fator*v4*C + (1 - fator*v4)*PREV;
-
-{ Plota }
-vidya;
 
  - MM com periodo variavel
    - se a volatilidade aumenta, (BB maior) periodicidade diminui
@@ -65,13 +22,11 @@ vidya;
   - Maximo Drawdown Historico - MDH (rentabilidade normalizada)
   - Numero de stops consecutivos
 
-
 Obs.: 1. Hit Rate =/= Rentabilidade
       Ex.: stop loss minimo e stop gain de 1 centavo acima da compra (aumenta Hit Rate)
       2. Slippage
       Diferenca que pode ocorrer na diferenca entre o stop loss e o valor que foi "parado"
       
-
 4) Ideias de Stop
   1. VBO - Volatility Breakout Stop
     - Colocar um stop de 1 ATR abaixo do fechamento (e colocado na ordem somente o menor)
