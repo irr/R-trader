@@ -144,37 +144,3 @@ test <- function(symbol = STK, f=TRUE) {
   addVA(gdb)
   addVIDYA(gdb, on=NA, col="green")
 }
-                                        # TODO: Advanced Techniques
-                                        # to be studied...
-                                        # http://www.r-bloggers.com/artificial-intelligence-in-trading-k-means-clustering/
-gkmeans <- function(symbol = STK) {
-  read(symbol)
-  x <- data.frame(d=index(Cl(gdb)),return=as.numeric(Delt(Cl(gdb))))
-  ggplot(x,aes(return))+stat_density(colour="steelblue", size=2, fill=NA)+xlab(label='Daily returns')
-}
-
-gclplot <- function(symbol = STK, n=15) {
-  read(symbol)
-  nasa <- tail(cbind(Delt(Op(gxt), Hi(gxt)), Delt(Op(gxt), Lo(gxt)), Delt(Op(gxt), Cl(gxt))), -1)
-  wss <- (nrow(nasa)-1)*sum(apply(nasa,2,var))
-  for (i in 2:n) wss[i] = sum(kmeans(nasa, centers=i)$withinss)
-  wss <- (data.frame(number=1:n,value=as.numeric(wss)))
-  ggplot(wss,aes(number,value))+geom_point()+xlab("Number of Clusters")+ylab("Within groups sum of squares")+geom_smooth()
-}
-
-gcl <- function(symbol = STK, n=5, max=10) {
-  read(symbol)
-  nasa <- tail(cbind(Delt(Op(gxt),Hi(gxt)), Delt(Op(gxt), Lo(gxt)), Delt(Op(gxt), Cl(gxt))), -1)
-  kmeanObject <- kmeans(nasa,n,iter.max=max)
-  print(kmeanObject$centers)
-  autocorrelation <- head(cbind(kmeanObject$cluster,lag(as.xts(kmeanObject$cluster),-1)),-1)
-  xtabs(~autocorrelation[,1]+(autocorrelation[,2]))
-  y <- apply(xtabs(~autocorrelation[,1]+(autocorrelation[,2])),1,sum)
-  x <- xtabs(~autocorrelation[,1]+(autocorrelation[,2]))
-  z <- x
-  for(i in 1:n)
-    {
-      z[i,] <- (x[i,]/y[i])
-    }
-  round(z,2)
-}
