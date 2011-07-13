@@ -1,9 +1,9 @@
-// npm install sqlite3
+// npm install sqlite3 node-static
 
 var DATABASE = '/home/irocha/R-trader/data/symbols.db';
 
 function sql(symbol, range) {
-    var sql = "select * from symbols where S = ? ";
+    var sql = "select D, O, H, L, C, V from symbols where S = ? ";
     var parameters = [ symbol ];
     if (range && (range.length == 2)) {
         sql += "and D between ? and ? ";
@@ -61,11 +61,8 @@ var emitter = new events.EventEmitter();
 
 emitter.addListener("db-load-ok", function(req, res, symbol, data) {
     var o = {
-        url : req.url,
         symbol : symbol,
-        size : data.length,
-        first : (data.length > 0) ? data[0] : undefined,
-        last : (data.length > 0) ? data[data.length - 1] : undefined
+        db : (data.length > 0) ? data : []
     };
     output(200, req, res, o);
 });
@@ -80,9 +77,9 @@ emitter.addListener("db-load-error", function(req, res, symbol, e) {
 });
 
 var http = require("http");
-var server = http.createServer();
 var web = require('node-static');
-var file = new web.Server('./static');
+var file = new web.Server('./public');
+var server = http.createServer();
 
 server.on('request', function(req, res) {
     req.addListener('end', function () {
