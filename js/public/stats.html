@@ -19,45 +19,7 @@
     <script language="javascript" type="text/javascript" src="/plugins/jqplot.canvasOverlay.js"></script>
     <script language="javascript" type="text/javascript" src="/plugins/jqplot.highlighter.js"></script>
 
-    <script language="javascript" type="text/javascript">
-
-      $(document).ready(function(){
-      var ohlc = [['2011-10-21', 607.57, 612.49, 601.23, 611.08],
-      ['2011-10-22', 639.58, 641.73, 611.36,   611.83],
-      ['2011-10-23', 632.21, 634.08, 623.29,   626.77],
-      ['2011-10-24', 642.12, 642.96, 629.66,   631.75]];
-
-      plot1 = $.jqplot('chart1',[ohlc],{
-      title: 'Chart',
-      seriesDefaults:{yaxis:'y2axis'},
-      axes: {
-      xaxis: {
-      renderer:$.jqplot.DateAxisRenderer,
-      tickOptions:{formatString:'%b %e'},
-      min: "2011-10-20",
-      max: "2011-10-25"
-      },
-      y2axis: {
-      tickOptions:{formatString:'$%d'}
-      }
-      },
-      series: [{renderer:$.jqplot.OHLCRenderer, rendererOptions:{candleStick:true}}],
-      highlighter: {
-      show: true,
-      showMarker:false,
-      tooltipAxes: 'xy',
-      yvalues: 4,
-      formatString:'<table class="jqplot-highlighter"> \
-        <tr><td>date:</td><td>%s</td></tr> \
-        <tr><td>open:</td><td>%s</td></tr> \
-        <tr><td>hi:</td><td>%s</td></tr> \
-        <tr><td>low:</td><td>%s</td></tr> \
-        <tr><td>close:</td><td>%s</td></tr></table>'
-      }
-      });
-
-      });
-    </script>
+    <script language="javascript" type="text/javascript" src="/stats.js"></script>
 
   </head>
   <body>
