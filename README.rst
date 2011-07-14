@@ -12,6 +12,7 @@ Dependencies
 - SQLite3
 - Node.js (sqlite3, node-static)
 - jqPlot
+- JQuery UI
 
 Author
 ------
