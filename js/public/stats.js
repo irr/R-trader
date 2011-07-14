@@ -1,16 +1,18 @@
 $(function() {
     $("#startdate").datepicker({ dateFormat: 'yy-mm-dd', defaultDate: -365 });
     $("#enddate").datepicker({ dateFormat: 'yy-mm-dd'});
+    $("#symbol").val("UOLL4");
     $("#startdate").val("2011-01-01");
     $("#enddate").val("2011-01-31");
     $("#plot").click(function(){
         var startdate = $("#startdate").val();
         var enddate = $("#enddate").val();
-        if ((startdate.length + enddate.length) != 20) {
-            alert("Please verify date fields!");
+        var symbol = $("#symbol").val();
+        if ((symbol.length < 4) || ((startdate.length + enddate.length) != 20)) {
+            alert("Please verify input fields!");
             return;
         }
-        $.getJSON('/load/UOLL4/'+startdate+"/"+enddate, function(data) {
+        $.getJSON('/load/' + symbol + '/'+startdate+"/"+enddate, function(data) {
             var db = data.db
             var ohlc = []
             for (var i = 0; i < db.length; i++) {
@@ -18,18 +20,19 @@ $(function() {
                 var lst = [obj.D, obj.O, obj.H, obj.L, obj.C, obj.V];
                 ohlc.push(lst);
             }
-            plot1 = $.jqplot('chart1',[ohlc],{
-                title: 'Chart',
+            $("#chart1").val("");
+            $.jqplot('chart',[ohlc],{
+                title: data.symbol,
                 seriesDefaults:{yaxis:'y2axis'},
                 axes: {
                     xaxis: {
                         renderer:$.jqplot.DateAxisRenderer,
-                        tickOptions:{formatString:'%b %e'},
+                        tickOptions:{formatString:'%b %d, %y'},
                         min: ohlc[0][0],
                         max: ohlc[ohlc.length - 1][0]
                     },
                     y2axis: {
-                        tickOptions:{formatString:'$%d'}
+                        tickOptions:{formatString:'$%.4f'}
                     }
                 },
                 series: [{renderer:$.jqplot.OHLCRenderer, rendererOptions:{candleStick:true}}],
@@ -38,10 +41,11 @@ $(function() {
                     showMarker:false,
                     tooltipAxes: 'xy',
                     yvalues: 4,
-                    formatString:'<table class="jqplot-highlighter"><tr><td>date:</td><td>%s</td></tr><tr><td>open:</td><td>%s</td></tr><tr><td>hi:</td><td>%s</td></tr><tr><td>low:</td><td>%s</td></tr><tr><td>close:</td><td>%s</td></tr></table>'
+                    formatString:'<table class="jqplot-highlighter"><tr><td>Date:</td><td>%s</td></tr><tr><td>Open:</td><td>%s</td></tr><tr><td>High:</td><td>%s</td></tr><tr><td>Low:</td><td>%s</td></tr><tr><td>Close:</td><td>%s</td></tr></table>'
                 }
-            });
-            $('#data1').dataTable( {
+            }).replot();
+            $('#data').dataTable( {
+                "bDestroy": true,
                 "aaData": ohlc,
                 "aoColumns": [
                     { "sTitle": "Date" },

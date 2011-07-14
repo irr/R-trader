@@ -30,10 +30,17 @@
 
   </head>
   <body>
-    <div>StartDate: <input type="text" id="startdate"></div>
-    <div>EndDate: <input type="text" id="enddate"></div>
-    <div><input type="button" id="plot" value="Plot"></div>
-    <div id="chart1" style="margin:20px;height:400px; width:800px;"></div>
-    <div><table cellpadding="0" cellspacing="0" border="0" class="display" align="right" id="data1"></table></div>
+    <div id="info" style="margin:20px;width:800px;">
+      <table cellpadding="0" cellspacing="10" border="0">
+        <tr>
+          <td align="right">Symbol:</td><td align="left"><input type="text" size="10" id="symbol"></td>
+          <td align="right">From:</td><td align="left"><input type="text" size="10" id="startdate"></td>
+          <td align="right">To:</td><td align="left"><input type="text" size="10" id="enddate"></td>
+          <td/><td align="right"><input type="button" id="plot" value="Show..."></td>
+        </tr>
+      </table>
+    </div>
+    <div id="chart" style="margin:20px;height:400px; width:800px;"></div>
+    <div style="margin:20px;height:400px; width:800px;"><table cellpadding="0" cellspacing="0" border="0" class="display" align="right" id="data"></table></div>
   </body>
 </html>
