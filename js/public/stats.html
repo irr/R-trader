@@ -9,8 +9,10 @@
 
     <link rel="stylesheet" type="text/css" href="/jquery.jqplot.css" />
     <link rel="stylesheet" type="text/css" href="/graph.css" />
+    <link type="text/css" href="css/smoothness/jquery-ui-1.8.14.custom.css" rel="stylesheet" />
 
     <script language="javascript" type="text/javascript" src="/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="/jquery-ui.js"></script>
 
     <script language="javascript" type="text/javascript" src="/jquery.jqplot.js"></script>
     <script language="javascript" type="text/javascript" src="/plugins/jqplot.dateAxisRenderer.js"></script>
@@ -23,6 +25,9 @@
 
   </head>
   <body>
+    <div>StartDate: <input type="text" id="startdate"></div>
+    <div>EndDate: <input type="text" id="enddate"></div>
+    <div><input type="button" id="plot" value="Plot"></div>
     <div id="chart1" style="margin:20px;height:400px; width:800px;"></div>
   </body>
 </html>
