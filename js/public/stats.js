@@ -1,6 +1,8 @@
 $(function() {
     $("#startdate").datepicker({ dateFormat: 'yy-mm-dd', defaultDate: -365 });
     $("#enddate").datepicker({ dateFormat: 'yy-mm-dd'});
+    $("#startdate").val("2011-01-01");
+    $("#enddate").val("2011-01-31");
     $("#plot").click(function(){
         var startdate = $("#startdate").val();
         var enddate = $("#enddate").val();
@@ -13,7 +15,7 @@ $(function() {
             var ohlc = []
             for (var i = 0; i < db.length; i++) {
                 var obj = db[i];
-                var lst = [obj.D, obj.O, obj.H, obj.L, obj.C];
+                var lst = [obj.D, obj.O, obj.H, obj.L, obj.C, obj.V];
                 ohlc.push(lst);
             }
             plot1 = $.jqplot('chart1',[ohlc],{
@@ -36,14 +38,20 @@ $(function() {
                     showMarker:false,
                     tooltipAxes: 'xy',
                     yvalues: 4,
-                    formatString:'<table class="jqplot-highlighter"> \
-<tr><td>date:</td><td>%s</td></tr> \
-<tr><td>open:</td><td>%s</td></tr> \
-<tr><td>hi:</td><td>%s</td></tr> \
-<tr><td>low:</td><td>%s</td></tr> \
-<tr><td>close:</td><td>%s</td></tr></table>'
+                    formatString:'<table class="jqplot-highlighter"><tr><td>date:</td><td>%s</td></tr><tr><td>open:</td><td>%s</td></tr><tr><td>hi:</td><td>%s</td></tr><tr><td>low:</td><td>%s</td></tr><tr><td>close:</td><td>%s</td></tr></table>'
                 }
             });
+            $('#data1').dataTable( {
+                "aaData": ohlc,
+                "aoColumns": [
+                    { "sTitle": "Date" },
+                    { "sTitle": "Open", "sClass": "right" },
+                    { "sTitle": "High", "sClass": "right" },
+                    { "sTitle": "Low", "sClass": "right" },
+                    { "sTitle": "Close", "sClass": "right" }
+                ]
+            } );
+
         });
     });
 });
