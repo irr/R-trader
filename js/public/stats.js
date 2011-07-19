@@ -20,7 +20,6 @@ $(function() {
                 var lst = [obj.D, obj.O, obj.H, obj.L, obj.C, obj.V];
                 ohlc.push(lst);
             }
-            $("#chart1").val("");
             $.jqplot('chart',[ohlc],{
                 title: data.symbol,
                 seriesDefaults:{yaxis:'y2axis'},
