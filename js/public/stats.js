@@ -54,9 +54,8 @@ $(function() {
                     { "sTitle": "Low", "sClass": "right" },
                     { "sTitle": "Close", "sClass": "right" }
                 ]
-            } );
-
-        });
+            });
+        }).error(function() { alert("Error retrieving " + symbol + " with range(" + startdate + "," + enddate + ")"); });
     });
 });
 

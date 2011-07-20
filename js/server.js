@@ -1,6 +1,6 @@
 // npm install sqlite3 node-static
 
-var DATABASE = '/home/irocha/R-trader/data/symbols.db';
+var DATABASE = '/Users/Ivan/R-trader/data/symbols.db';
 
 function sql(symbol, range) {
     var sql = "select D, O, H, L, C, V from symbols where S = ? ";
@@ -51,7 +51,9 @@ function output(code, req, res, obj) {
     res.writeHead(code, {
         'Content-Type' : 'application/json'
     });
-    res.write(JSON.stringify(obj));
+    if (code == 200) {
+        res.write(JSON.stringify(obj));
+    }
     res.end();
 }
 
@@ -71,7 +73,7 @@ emitter.addListener("db-load-error", function(req, res, symbol, e) {
     var o = {
         url : req,
         symbol : symbol,
-        error : e
+        problem : e
     };
     output(500, req, res, o);
 });
