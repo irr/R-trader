@@ -38,6 +38,8 @@
     
     // called with scope of series.
     $.jqplot.LineRenderer.prototype.init = function(options, plot) {
+        // Group: Properties
+        //
         options = options || {};
         this._type='line';
         // prop: smooth
@@ -56,6 +58,57 @@
         this.renderer._smoothedData = [];
         // this is smoothed data in plot units (plot coordinates), like plotData.
         this.renderer._smoothedPlotData = [];
+        this.renderer._hiBandGridData = [];
+        this.renderer._lowBandGridData = [];
+        this.renderer._hiBandSmoothedData = [];
+        this.renderer._lowBandSmoothedData = [];
+
+        // prop: bandData
+        // Data used to draw bands above/below a line.
+        // Only y values are specified for band data, x values are always
+        // assumed from the series data.
+        //
+        // Can be of form [[yl1, yl2, ...], [yu1, yu2, ...]] where
+        // [yl1, yl2, ...] are y values of the lower line and
+        // [yu1, yu2, ...] are y values of the upper line.
+        //
+        // Can be of form [[yl1, yu1], [yl2, yu2], [yl3, yu3], ...] where
+        // there must be 3 or more array elements.  In this case, 
+        // [yl1, yu1] specifies the lower and upper y values for the 1st
+        // data point and so on.
+        this.renderer.bandData = [];
+
+        // Group: bands
+        // Banding around line, e.g error bands or confidence intervals.
+        this.renderer.bands = {
+            // prop: show
+            // true to show the bands.  If bandData or interval is
+            // supplied, show will be set to true by default.
+            show: false,
+            hiData: [],
+            lowData: [],
+            // prop: color
+            // color of lines at top and bottom of bands [default: series color].
+            color: this.color,
+            // prop: showLines
+            // True to show lines at top and bottom of bands [default: false].
+            showLines: false,
+            // prop: fill
+            // True to fill area between bands [default: true].
+            fill: true,
+            // prop: fillColor
+            // css color spec for filled area.  [default: series color].
+            fillColor: null,
+            _min: null,
+            _max: null,
+            // prop: interval
+            // User specified interval above and below line for bands [default: '3%''].
+            // Can be a value like 3 or a string like '3%' 
+            // or an upper/lower array like [1, -2] or ['2%', '-1.5%']
+            interval: '3%'
+        };
+
+
         var lopts = {highlightMouseOver: options.highlightMouseOver, highlightMouseDown: options.highlightMouseDown, highlightColor: options.highlightColor};
         
         delete (options.highlightMouseOver);
@@ -63,6 +116,152 @@
         delete (options.highlightColor);
         
         $.extend(true, this.renderer, options);
+
+        // if we are given some band data, and bands aren't explicity set to false in options, turn them on.
+        if (this.renderer.bandData.length > 1 && (!options.bands || options.bands.show == null)) {
+            this.renderer.bands.show = true;
+        }
+
+        // if we are given an interval, and bands aren't explicity set to false in options, turn them on.
+        else if (options.bands && options.bands.show == null && options.bands.interval != null) {
+            this.renderer.bands.show = true;
+        }
+
+        // if plot is filled, turn off bands.
+        if (this.fill) {
+            this.renderer.bands.show = false;
+        }
+
+        if (this.renderer.bands.show) {
+            // use bandData if no data specified in bands option
+            if (this.renderer.bands.hiData.length == 0 || this.renderer.bands.lowData.length == 0) {
+                var bd = this.renderer.bandData;
+                if (bd.length == 2) {
+                    // detect upper or lower data
+                    var hi = (bd[0][0] > bd[1][0]) ? 0 : 1;
+                    var low = (hi) ? 0 : 1;
+                    this.renderer.bands.hiData = bd[hi];
+                    this.renderer.bands.lowData = bd[low];
+                }
+
+                else if (bd.length > 2) {
+                    // detect hi and low data
+                    var hi = (bd[0][0] > bd[0][1]) ? 0 : 1;
+                    var low = (hi) ? 0 : 1;
+                    for (var i=0, l=bd.length; i<l; i++) {
+                        this.renderer.bands.hiData.push(bd[i][hi]);
+                        this.renderer.bands.lowData.push(bd[i][low]);
+                    }
+                }
+
+                // don't have proper data, auto calculate
+                else {
+                    var intrv = this.renderer.bands.interval;
+                    var a = null;
+                    var b = null;
+                    var afunc = null;
+                    var bfunc = null;
+
+                    if ($.isArray(intrv)) {
+                        a = intrv[0];
+                        b = intrv[1];
+                    }
+                    else {
+                        a = intrv;
+                    }
+
+                    if (isNaN(a)) {
+                        // we have a string
+                        if (a.charAt(a.length - 1) === '%') {
+                            afunc = 'multiply';
+                            a = parseFloat(a)/100 + 1;
+                        }
+                    }
+
+                    else {
+                        a = parseFloat(a);
+                        afunc = 'add';
+                    }
+
+                    if (b !== null && isNaN(b)) {
+                        // we have a string
+                        if (b.charAt(b.length - 1) === '%') {
+                            bfunc = 'multiply';
+                            b = parseFloat(b)/100 + 1;
+                        }
+                    }
+
+                    else if (b !== null) {
+                        b = parseFloat(b);
+                        bfunc = 'add';
+                    }
+
+                    if (a !== null) {
+                        if (b === null) {
+                            b = -a;
+                            bfunc = afunc;
+                            if (bfunc === 'multiply') {
+                                b += 2;
+                            }
+                        }
+
+                        // make sure a always applies to hi band.
+                        if (a < b) {
+                            var temp = a;
+                            a = b;
+                            b = temp;
+                            temp = afunc;
+                            afunc = bfunc;
+                            bfunc = temp;
+                        }
+
+                        var d = this.data;
+                        for (var i=0, l = d.length; i < l; i++) {
+                            switch (afunc) {
+                                case 'add':
+                                    this.renderer.bands.hiData.push(d[i][1] + a);
+                                    break;
+                                case 'multiply':
+                                    this.renderer.bands.hiData.push(d[i][1] * a);
+                                    break;
+                            }
+                            switch (bfunc) {
+                                case 'add':
+                                    this.renderer.bands.lowData.push(d[i][1] + b);
+                                    break;
+                                case 'multiply':
+                                    this.renderer.bands.lowData.push(d[i][1] * b);
+                                    break;
+                            }
+                        }
+                    }
+
+                    else {
+                        this.renderer.bands.show = false;
+                    }
+                }
+
+                this.renderer.bands._max = $.jqplot.arrayMax(this.renderer.bands.hiData);
+                this.renderer.bands._min = $.jqplot.arrayMin(this.renderer.bands.lowData);
+            }
+
+            // one last check for proper data
+            if (this.renderer.bands.hiData.length != this.renderer.bands.lowData.length) {
+                this.renderer.bands.show = false;
+            }
+
+            if (this.renderer.bands.hiData.length != this.data.length) {
+                this.renderer.bands.show = false;
+            }
+
+            if (this.renderer.bands.fillColor === null) {
+                var c = $.jqplot.getColorComponents(this.renderer.bands.color);
+                // now adjust alpha to differentiate fill
+                c[3] = c[3] * 0.5;
+                this.renderer.bands.fillColor = 'rgba(' + c[0] +', '+ c[1] +', '+ c[2] +', '+ c[3] + ')';
+            }
+        }
+
 
         // smoothing is not compatible with stacked lines, disable
         if (this._stack) {
@@ -87,8 +286,9 @@
         this._areaPoints = [];
         this._boundingBox = [[],[]];
         
-        if (!this.isTrendline && this.fill) {
-        
+        if (!this.isTrendline && this.fill || this.renderer.bands.show) {
+            // Group: Properties
+            //        
             // prop: highlightMouseOver
             // True to highlight area on a filled plot when moused over.
             // This must be false to enable highlightMouseDown to highlight when clicking on an area on a filled plot.
@@ -108,7 +308,8 @@
             $.extend(true, this, {highlightMouseOver: lopts.highlightMouseOver, highlightMouseDown: lopts.highlightMouseDown, highlightColor: lopts.highlightColor});
             
             if (!this.highlightColor) {
-                this.highlightColor = $.jqplot.computeHighlightColors(this.fillColor);
+                var fc = (this.renderer.bands.show) ? this.renderer.bands.fillColor : this.fillColor;
+                this.highlightColor = $.jqplot.computeHighlightColors(fc);
             }
             // turn off (disable) the highlighter plugin
             if (this.highlighter) {
@@ -135,7 +336,6 @@
 
     function computeSteps (d1, d2) {
         var s = Math.sqrt(Math.pow((d2[0]- d1[0]), 2) + Math.pow ((d2[1] - d1[1]), 2));
-        console.log(s);
         return 5.7648 * Math.log(s) + 7.4456;
     }
 
@@ -166,6 +366,8 @@
         var steps =null;
         var _steps = null;
         var dist = gd.length/dim;
+        var _smoothedData = [];
+        var _smoothedPlotData = [];
 
         if (!isNaN(parseFloat(smooth))) {
             steps = parseFloat(smooth);
@@ -187,6 +389,7 @@
             else return x1 - x0;
         }
 
+        var A, B, C, D;
         // loop through each line segment.  Have # points - 1 line segments.  Nmber segments starting at 1.
         var nmax = gd.length - 1;
         for (var num = 1, gdl = gd.length; num<gdl; num++) {
@@ -242,13 +445,15 @@
                 tempx = xx[num - 1] + j * increment;
                 temp.push(tempx);
                 temp.push(A + B * tempx + C * Math.pow(tempx, 2) + D * Math.pow(tempx, 3));
-                this.renderer._smoothedData.push(temp);
-                this.renderer._smoothedPlotData.push([xp(temp[0]), yp(temp[1])]);
+                _smoothedData.push(temp);
+                _smoothedPlotData.push([xp(temp[0]), yp(temp[1])]);
             }
         }
 
-        this.renderer._smoothedData.push(gd[i]);
-        this.renderer._smoothedPlotData.push([xp(gd[i][0]), yp(gd[i][1])]);
+        _smoothedData.push(gd[i]);
+        _smoothedPlotData.push([xp(gd[i][0]), yp(gd[i][1])]);
+
+        return [_smoothedData, _smoothedPlotData];
     }
 
     ///////
@@ -285,11 +490,13 @@
         var temp = null;
         var t, s, h1, h2, h3, h4;
         var TiX, TiY, Ti1X, Ti1Y;
-        var Px, Py, p;
+        var pX, pY, p;
         var sd = [];
         var spd = [];
         var dist = gd.length/dim;
         var min, max, stretch, scale, shift;
+        var _smoothedData = [];
+        var _smoothedPlotData = [];
         if (!isNaN(parseFloat(smooth))) {
             steps = parseFloat(smooth);
         }
@@ -355,15 +562,17 @@
                 pY = h1*gd[i][1] + h3*gd[i+1][1] + h2*TiY + h4*Ti1Y;
                 p = [pX, pY];
 
-                this.renderer._smoothedData.push(p);
-                this.renderer._smoothedPlotData.push([xp(pX), yp(pY)]);
+                _smoothedData.push(p);
+                _smoothedPlotData.push([xp(pX), yp(pY)]);
             }
         }
-        this.renderer._smoothedData.push(gd[l]);
-        this.renderer._smoothedPlotData.push([xp(gd[l][0]), yp(gd[l][1])]);
+        _smoothedData.push(gd[l]);
+        _smoothedPlotData.push([xp(gd[l][0]), yp(gd[l][1])]);
+
+        return [_smoothedData, _smoothedPlotData];
     }
     
-    // Method: setGridData
+    // setGridData
     // converts the user data values to grid coordinates and stores them
     // in the gridData array.
     // Called with scope of a series.
@@ -377,6 +586,11 @@
         this._prevGridData = [];
         this.renderer._smoothedData = [];
         this.renderer._smoothedPlotData = [];
+        this.renderer._hiBandGridData = [];
+        this.renderer._lowBandGridData = [];
+        this.renderer._hiBandSmoothedData = [];
+        this.renderer._lowBandSmoothedData = [];
+        var hasNull = false;
         for (var i=0, l=this.data.length; i < l; i++) {
             // if not a line series or if no nulls in data, push the converted point onto the array.
             if (data[i][0] != null && data[i][1] != null) {
@@ -384,9 +598,11 @@
             }
             // else if there is a null, preserve it.
             else if (data[i][0] == null) {
+                hasNull = true;
                 this.gridData.push([null, yp.call(this._yaxis, data[i][1])]);
             }
             else if (data[i][1] == null) {
+                hasNull = true;
                 this.gridData.push([xp.call(this._xaxis, data[i][0]), null]);
             }
             // if not a line series or if no nulls in data, push the converted point onto the array.
@@ -401,17 +617,55 @@
                 this._prevGridData.push([xp.call(this._xaxis, pdata[i][0]), null]);
             }
         }
-        if (this._type === 'line' && this.renderer.smooth && this.gridData.length > 1) {
+
+        // don't do smoothing or bands on broken lines.
+        if (hasNull) {
+            this.renderer.smooth = false;
+            if (this._type === 'liine') this.renderer.bands.show = false;
+        }
+
+        if (this._type === 'line' && this.renderer.bands.show) {
+            for (var i=0, l=this.data.length; i<l; i++) {
+                this.renderer._hiBandGridData.push([xp.call(this._xaxis, data[i][0]), yp.call(this._yaxis, this.renderer.bands.hiData[i])]);
+                this.renderer._lowBandGridData.push([xp.call(this._xaxis, data[i][0]), yp.call(this._yaxis, this.renderer.bands.lowData[i])]);
+            }
+        }
+
+        // calculate smoothed data if enough points and no nulls
+        if (this._type === 'line' && this.renderer.smooth && this.gridData.length > 2) {
+            var ret;
             if (this.renderer.constrainSmoothing) {
-                computeConstrainedSmoothedData.call(this, this.gridData);
+                ret = computeConstrainedSmoothedData.call(this, this.gridData);
+                this.renderer._smoothedData = ret[0];
+                this.renderer._smoothedPlotData = ret[1];
+
+                if (this.renderer.bands.show) {
+                    ret = computeConstrainedSmoothedData.call(this, this.renderer._hiBandGridData);
+                    this.renderer._hiBandSmoothedData = ret[0];
+                    ret = computeConstrainedSmoothedData.call(this, this.renderer._lowBandGridData);
+                    this.renderer._lowBandSmoothedData = ret[0];
+                }
+
+                ret = null;
             }
             else {
-                computeHermiteSmoothedData.call(this, this.gridData);
+                ret = computeHermiteSmoothedData.call(this, this.gridData);
+                this.renderer._smoothedData = ret[0];
+                this.renderer._smoothedPlotData = ret[1];
+
+                if (this.renderer.bands.show) {
+                    ret = computeHermiteSmoothedData.call(this, this.renderer._hiBandGridData);
+                    this.renderer._hiBandSmoothedData = ret[0];
+                    ret = computeHermiteSmoothedData.call(this, this.renderer._lowBandGridData);
+                    this.renderer._lowBandSmoothedData = ret[0];
+                }
+
+                ret = null;
             }
         }
     };
     
-    // Method: makeGridData
+    // makeGridData
     // converts any arbitrary data values to grid coordinates and
     // returns them.  This method exists so that plugins can use a series'
     // linerenderer to generate grid data points without overwriting the
@@ -425,6 +679,11 @@
         var pgd = [];
         this.renderer._smoothedData = [];
         this.renderer._smoothedPlotData = [];
+        this.renderer._hiBandGridData = [];
+        this.renderer._lowBandGridData = [];
+        this.renderer._hiBandSmoothedData = [];
+        this.renderer._lowBandSmoothedData = [];
+        var hasNull = false;
         for (var i=0; i<data.length; i++) {
             // if not a line series or if no nulls in data, push the converted point onto the array.
             if (data[i][0] != null && data[i][1] != null) {
@@ -432,18 +691,57 @@
             }
             // else if there is a null, preserve it.
             else if (data[i][0] == null) {
+                hasNull = true;
                 gd.push([null, yp.call(this._yaxis, data[i][1])]);
             }
             else if (data[i][1] == null) {
+                hasNull = true;
                 gd.push([xp.call(this._xaxis, data[i][0]), null]);
             }
         }
-        if (this._type === 'line' && this.renderer.smooth && gd.length > 1) {
+
+        // don't do smoothing or bands on broken lines.
+        if (hasNull) {
+            this.renderer.smooth = false;
+            if (this._type === 'line') this.renderer.bands.show = false;
+        }
+
+        if (this._type === 'line' && this.renderer.bands.show) {
+            for (var i=0, l=this.data.length; i<l; i++) {
+                this.renderer._hiBandGridData.push([xp.call(this._xaxis, data[i][0]), yp.call(this._yaxis, this.renderer.bands.hiData[i])]);
+                this.renderer._lowBandGridData.push([xp.call(this._xaxis, data[i][0]), yp.call(this._yaxis, this.renderer.bands.lowData[i])]);
+            }
+        }
+
+        if (this._type === 'line' && this.renderer.smooth && gd.length > 2) {
+            var ret;
             if (this.renderer.constrainSmoothing) {
-                computeConstrainedSmoothedData.call(this, gd);
+                ret = computeConstrainedSmoothedData.call(this, gd);
+                this.renderer._smoothedData = ret[0];
+                this.renderer._smoothedPlotData = ret[1];
+
+                if (this.renderer.bands.show) {
+                    ret = computeConstrainedSmoothedData.call(this, this.renderer._hiBandGridData);
+                    this.renderer._hiBandSmoothedData = ret[0];
+                    ret = computeConstrainedSmoothedData.call(this, this.renderer._lowBandGridData);
+                    this.renderer._lowBandSmoothedData = ret[0];
+                }
+
+                ret = null;
             }
             else {
-                computeHermiteSmoothedData.call(this, gd);
+                ret = computeHermiteSmoothedData.call(this, gd);
+                this.renderer._smoothedData = ret[0];
+                this.renderer._smoothedPlotData = ret[1];
+
+                if (this.renderer.bands.show) {
+                    ret = computeHermiteSmoothedData.call(this, this.renderer._hiBandGridData);
+                    this.renderer._hiBandSmoothedData = ret[0];
+                    ret = computeHermiteSmoothedData.call(this, this.renderer._lowBandGridData);
+                    this.renderer._lowBandSmoothedData = ret[0];
+                }
+
+                ret = null;
             }
         }
         return gd;
@@ -451,9 +749,10 @@
     
 
     // called within scope of series.
-    $.jqplot.LineRenderer.prototype.draw = function(ctx, gd, options) {
+    $.jqplot.LineRenderer.prototype.draw = function(ctx, gd, options, plot) {
         var i;
-        var opts = (options != undefined) ? options : {};
+        // get a copy of the options, so we don't modify the original object.
+        var opts = $.extend(true, {}, options);
         var shadow = (opts.shadow != undefined) ? opts.shadow : this.shadow;
         var showLine = (opts.showLine != undefined) ? opts.showLine : this.showLine;
         var fill = (opts.fill != undefined) ? opts.fill : this.fill;
@@ -464,9 +763,9 @@
             if (showLine) {
                 // if we fill, we'll have to add points to close the curve.
                 if (fill) {
-                    if (this.fillToZero) {
+                    if (this.fillToZero) { 
                         // have to break line up into shapes at axis crossings
-                        negativeColor = this.negativeColor;
+                        var negativeColor = this.negativeColor;
                         if (! this.useNegativeColors) {
                             negativeColor = opts.fillStyle;
                         }
@@ -485,6 +784,8 @@
                             this._areaPoints = [];
                             var pyzero = this._yaxis.series_u2p(this.fillToValue);
                             var pxzero = this._xaxis.series_u2p(this.fillToValue);
+
+                            opts.closePath = true;
                             
                             if (this.fillAxis == 'y') {
                                 tempgd.push([gd[0][0], pyzero]);
@@ -530,7 +831,7 @@
                                 tempgd.push([gd[gd.length-1][0], pyzero]); 
                                 this._areaPoints.push([gd[gd.length-1][0], pyzero]); 
                             }
-                            // now draw this shape and shadow.
+                            // now draw the last area.
                             if (shadow) {
                                 this.renderer.shadowRenderer.draw(ctx, tempgd, opts);
                             }
@@ -610,6 +911,31 @@
                 }
                 else {
 
+                    if (this.renderer.bands.show) {
+                        var bdat;
+                        var bopts = $.extend(true, {}, opts);
+                        if (this.renderer.bands.showLines) {
+                            bdat = (this.renderer.smooth) ? this.renderer._hiBandSmoothedData : this.renderer._hiBandGridData;
+                            this.renderer.shapeRenderer.draw(ctx, bdat, opts);
+                            bdat = (this.renderer.smooth) ? this.renderer._lowBandSmoothedData : this.renderer._lowBandGridData;
+                            this.renderer.shapeRenderer.draw(ctx, bdat, bopts);
+                        }
+
+                        if (this.renderer.bands.fill) {
+                            if (this.renderer.smooth) {
+                                bdat = this.renderer._hiBandSmoothedData.concat(this.renderer._lowBandSmoothedData.reverse());
+                            }
+                            else {
+                                bdat = this.renderer._hiBandGridData.concat(this.renderer._lowBandGridData.reverse());
+                            }
+                            this._areaPoints = bdat;
+                            bopts.closePath = true;
+                            bopts.fill = true;
+                            bopts.fillStyle = this.renderer.bands.fillColor;
+                            this.renderer.shapeRenderer.draw(ctx, bdat, bopts);
+                        }
+                    }
+
                     if (shadow) {
                         this.renderer.shadowRenderer.draw(ctx, gd, opts);
                     }
@@ -634,6 +960,12 @@
                     ymin = p[1];
                 }
             }
+
+            if (this.renderer.bands.show) {
+                ymax = this._yaxis.series_u2p(this.renderer.bands._min);
+                ymin = this._yaxis.series_u2p(this.renderer.bands._max);
+            }
+
             this._boundingBox = [[xmin, ymax], [xmax, ymin]];
         
             // now draw the markers
@@ -694,6 +1026,10 @@
         s._highlightedPoint = pidx;
         plot.plugins.lineRenderer.highlightedSeriesIndex = sidx;
         var opts = {fillStyle: s.highlightColor};
+        if (s.renderer.bands.show) {
+            opts.fill = true,
+            opts.closePath = true;
+        }
         s.renderer.shapeRenderer.draw(canvas._ctx, points, opts);
         canvas = null;
     }

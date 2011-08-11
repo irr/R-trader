@@ -695,6 +695,10 @@
         for (var i=0; i<this._series.length; i++) {
             var s = this._series[i];
             var d = s._plotData;
+            if (s._type === 'line' && s.renderer.bands.show && this.name !== 'xaxis' && this.name !== 'x2axis') {
+                d = [[0, s.renderer.bands._min], [1, s.renderer.bands._max]];
+            }
+
             var minyidx = 1, maxyidx = 1;
 
             if (s._type != null && s._type == 'ohlc') {
@@ -1232,6 +1236,16 @@
             }
         }
         this.data = temp;
+
+        // parse the renderer options and apply default colors if not provided
+        if (!this.color && this.show) {
+            this.color = plot.colorGenerator.get(this.index);
+        }
+        if (!this.negativeColor && this.show) {
+            this.negativeColor = plot.negativeColorGenerator.get(this.index);
+        }
+
+
         if (!this.fillColor) {
             this.fillColor = this.color;
         }
@@ -1609,15 +1623,15 @@
         // The data should be in the form of an array of 2D or 1D arrays like
         // > [ [[x1, y1], [x2, y2],...], [y1, y2, ...] ].
         this.data = [];
-        // prop dataRenderer
+        // prop: dataRenderer
         // A callable which can be used to preprocess data passed into the plot.
         // Will be called with 2 arguments, the plot data and a reference to the plot.
         this.dataRenderer;
-        // prop dataRendererOptions
+        // prop: dataRendererOptions
         // Options that will be passed to the dataRenderer.
         // Can be of any type.
         this.dataRendererOptions;
-        // prop noDataIndicator
+        // prop: noDataIndicator
         // Options to set up a mock plot with a data loading indicator if no data is specified.
         this.noDataIndicator = {    
             show: false,
@@ -1771,7 +1785,8 @@
         this.preDrawSeriesShadowHooks = new $.jqplot.HooksManager();
         this.postDrawSeriesShadowHooks = new $.jqplot.HooksManager();
         
-        this.colorGenerator = $.jqplot.ColorGenerator;
+        this.colorGenerator = new $.jqplot.ColorGenerator();
+        this.negativeColorGenerator = new $.jqplot.ColorGenerator();
 
         this.canvasManager = new $.jqplot.CanvasManager();
         
@@ -2265,8 +2280,10 @@
                 this.captureRightClick = this.options.captureRightClick;
             }
             this.defaultAxisStart = (options && options.defaultAxisStart != null) ? options.defaultAxisStart : this.defaultAxisStart;
-            var cg = new this.colorGenerator(this.seriesColors);
-            var ncg = new this.colorGenerator(this.negativeSeriesColors);
+            this.colorGenerator.setColors(this.seriesColors);
+            this.negativeColorGenerator.setColors(this.negativeSeriesColors);
+            // var cg = new this.colorGenerator(this.seriesColors);
+            // var ncg = new this.colorGenerator(this.negativeSeriesColors);
             // this._gridPadding = this.options.gridPadding;
             $.extend(true, this._gridPadding, this.options.gridPadding);
             this.sortData = (this.options.sortData != null) ? this.options.sortData : this.sortData;
@@ -2343,15 +2360,15 @@
                     temp._yaxis.show = true;
                 }
 
-                // parse the renderer options and apply default colors if not provided
-                if (!temp.color && temp.show != false) {
-                    temp.color = cg.next();
-                    colorIndex = cg.getIndex() - 1;;
-                }
-                if (!temp.negativeColor && temp.show != false) {
-                    temp.negativeColor = ncg.get(colorIndex);
-                    ncg.setIndex(colorIndex);
-                }
+                // // parse the renderer options and apply default colors if not provided
+                // if (!temp.color && temp.show != false) {
+                //     temp.color = cg.next();
+                //     colorIndex = cg.getIndex() - 1;;
+                // }
+                // if (!temp.negativeColor && temp.show != false) {
+                //     temp.negativeColor = ncg.get(colorIndex);
+                //     ncg.setIndex(colorIndex);
+                // }
                 if (!temp.label) {
                     temp.label = 'Series '+ (i+1).toString();
                 }
@@ -2886,7 +2903,7 @@
                         y = gridpos.y;
                         r = s.renderer;
                         if (s.show) {
-                            if (s.fill && (!plot.plugins.highlighter || !plot.plugins.highlighter.show)) {
+                            if ((s.fill || (s.renderer.bands.show && s.renderer.bands.fill)) && (!plot.plugins.highlighter || !plot.plugins.highlighter.show)) {
                                 // first check if it is in bounding box
                                 var inside = false;
                                 if (x>s._boundingBox[0][0] && x<s._boundingBox[1][0] && y>s._boundingBox[1][1] && y<s._boundingBox[0][1]) { 
@@ -2915,6 +2932,7 @@
                                 break;
                                 
                             }
+
                             else {
                                 t = s.markerRenderer.size/2+s.neighborThreshold;
                                 threshold = (t > 0) ? t : 0;
@@ -3259,10 +3277,14 @@
                 var sum = newrgb[0] + newrgb[1] + newrgb[2];
                 for (var j=0; j<3; j++) {
                     // when darkening, lowest color component can be is 60.
-                    newrgb[j] = (sum > 570) ?  newrgb[j] * 0.8 : newrgb[j] + 0.3 * (255 - newrgb[j]);
+                    newrgb[j] = (sum > 660) ?  newrgb[j] * 0.85 : 0.73 * newrgb[j] + 90;
                     newrgb[j] = parseInt(newrgb[j], 10);
+                    (newrgb[j] > 255) ? 255 : newrgb[j];
                 }
-                ret.push('rgb('+newrgb[0]+','+newrgb[1]+','+newrgb[2]+')');
+                // newrgb[3] = (rgba[3] > 0.4) ? rgba[3] * 0.4 : rgba[3] * 1.5;
+                // newrgb[3] = (rgba[3] > 0.5) ? 0.8 * rgba[3] - .1 : rgba[3] + 0.2;
+                newrgb[3] = 0.3 + 0.35 * rgba[3];
+                ret.push('rgba('+newrgb[0]+','+newrgb[1]+','+newrgb[2]+','+newrgb[3]+')');
             }
         }
         else {
@@ -3271,10 +3293,16 @@
             var sum = newrgb[0] + newrgb[1] + newrgb[2];
             for (var j=0; j<3; j++) {
                 // when darkening, lowest color component can be is 60.
-                newrgb[j] = (sum > 570) ?  newrgb[j] * 0.8 : newrgb[j] + 0.3 * (255 - newrgb[j]);
+                // newrgb[j] = (sum > 570) ?  newrgb[j] * 0.8 : newrgb[j] + 0.3 * (255 - newrgb[j]);
+                // newrgb[j] = parseInt(newrgb[j], 10);
+                newrgb[j] = (sum > 660) ?  newrgb[j] * 0.85 : 0.73 * newrgb[j] + 90;
                 newrgb[j] = parseInt(newrgb[j], 10);
+                (newrgb[j] > 255) ? 255 : newrgb[j];
             }
-            ret = 'rgb('+newrgb[0]+','+newrgb[1]+','+newrgb[2]+')';
+            // newrgb[3] = (rgba[3] > 0.4) ? rgba[3] * 0.4 : rgba[3] * 1.5;
+            // newrgb[3] = (rgba[3] > 0.5) ? 0.8 * rgba[3] - .1 : rgba[3] + 0.2;
+            newrgb[3] = 0.3 + 0.35 * rgba[3];
+            ret = 'rgba('+newrgb[0]+','+newrgb[1]+','+newrgb[2]+','+newrgb[3]+')';
         }
         return ret;
     };
