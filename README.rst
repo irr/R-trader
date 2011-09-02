@@ -64,6 +64,9 @@ After installing R packages (command: **install.packages(c("RSQLite", "quantmod"
  Loading required package: TTR
  Loading required package: RSQLite
  Loading required package: DBI
+
+To view all technical analisys charts, type inside **R**::
+
  > test()
 
 **IMPORTANT**: remember to change your project directory inside files::
