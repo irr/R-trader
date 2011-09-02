@@ -26,6 +26,8 @@ From inside **R-trader/data** directory, create sample data base typing::
  Removing temporary files...
  Done.
 
+**IMPORTANT**: real *(swing)* data from **BOVESPA** since **1994-01-03** (until 2011-06-17)
+
 After installing R packages (command: **install.packages(c("RSQLite", "quantmod"))**), from inside **R-trader** base directory type::
 
  [irocha@napoleon R-trader (master)]$ R
