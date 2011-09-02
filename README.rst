@@ -4,7 +4,7 @@ R-trader
 
 About
 -----
-Mechanical Trading System using R
+Mechanical Trading System using R (prototype for fun and learning purposes)
 
 Dependencies
 ------------
