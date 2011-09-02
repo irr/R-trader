@@ -1,7 +1,7 @@
 // curl http://npmjs.org/install.sh | sh
 // npm install sqlite3 node-static
 
-var DATABASE = '/home/irocha/R-trader/data/symbols.db';
+var DATABASE = '/home/irocha/git/R-trader/data/symbols.db';
 
 function sql(symbol, range) {
     var sql = "select D, O, H, L, C, V from symbols where S = ? ";

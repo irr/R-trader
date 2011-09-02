@@ -14,8 +14,8 @@ Dependencies
 - jqPlot
 - JQuery UI
 
-Setup
------
+R Setup
+-------
 From inside **R-trader/data** directory, create sample data base typing::
 
  [irocha@napoleon data (master)]$ ./createsqlitedb.sh 
@@ -92,6 +92,45 @@ After installing R packages (command: **install.packages(c("RSQLite", "quantmod"
    conn <- dbConnect("SQLite", dbname)
    ...
 
+
+Node Setup
+----------
+
+After installing node.js and npm, install dependencies typing::
+
+ [irocha@napoleon ~]$ npm install sqlite3 node-static
+
+ > sqlite3@2.0.16 preinstall /home/irocha/node_modules/sqlite3
+ > node-waf clean || true; node-waf configure build
+
+ Nothing to clean (project not configured)
+ Setting srcdir to                        : /home/irocha/node_modules/sqlite3 
+ Setting blddir to                        : /home/irocha/node_modules/sqlite3/build 
+ Checking for program g++ or c++          : /usr/bin/g++ 
+ Checking for program cpp                 : /usr/bin/cpp 
+ Checking for program ar                  : /usr/bin/ar 
+ Checking for program ranlib              : /usr/bin/ranlib 
+ Checking for g++                         : ok  
+ Checking for node path                   : not found 
+ Checking for node prefix                 : ok /data/node 
+ Checking for sqlite3                     : yes 
+ 'configure' finished successfully (0.056s)
+ Waf: Entering directory `/home/irocha/node_modules/sqlite3/build'
+ [1/4] cxx: src/sqlite3.cc -> build/default/src/sqlite3_1.o
+ [2/4] cxx: src/database.cc -> build/default/src/database_1.o                                                            
+ [3/4] cxx: src/statement.cc -> build/default/src/statement_1.o                                                          
+ [4/4] cxx_link: build/default/src/sqlite3_1.o build/default/src/database_1.o build/default/src/statement_1.o -> build/default/sqlite3_bindings.node                                                                                             
+ Waf: Leaving directory `/home/irocha/node_modules/sqlite3/build'                                                        
+ 'build' finished successfully (1.678s)
+ node-static@0.5.9 ./node_modules/node-static 
+ sqlite3@2.0.16 ./node_modules/sqlite3 
+
+To plot Candlestick chart, from inside **R-trader/js** directory, type::
+
+ [irocha@napoleon js (master)]$ node server.js 
+ jstrader listening on 8080...
+
+Point your browser to `http://localhost:8080/stats.html <http://localhost:8080>`_ and have fun...
 
 Author
 ------
