@@ -26,7 +26,7 @@ From inside **R-trader/data** directory, create sample data base typing::
  Removing temporary files...
  Done.
 
-After installing R packages (command: install.packages(c("RSQLite", "quantmod"))), from inside **R-trader** base directory type::
+After installing R packages (command: **install.packages(c("RSQLite", "quantmod"))**), from inside **R-trader** base directory type::
 
  [irocha@napoleon R-trader (master)]$ R
 
