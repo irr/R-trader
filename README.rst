@@ -96,7 +96,33 @@ After installing R packages (command: **install.packages(c("RSQLite", "quantmod"
 Node Setup
 ----------
 
-After installing node.js and npm, install dependencies typing::
+After installing **`node.js <http://nodejs.org/>_**, install dependencies typing::
+
+ [irocha@napoleon ~]$ curl http://npmjs.org/install.sh | sh
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+ 100  3927  100  3927    0     0   4773      0 --:--:-- --:--:-- --:--:-- 11252
+ fetching: http://registry.npmjs.org/npm/-/npm-1.0.27.tgz
+ 0.4.11
+ 1.0.27
+ cleanup prefix=/data/node
+
+ This script will find and eliminate any shims, symbolic
+ links, and other cruft that was installed by npm 0.x.
+
+ Is this OK? enter 'yes' or 'no' 
+ yes
+
+ All clean!
+ ! [ -d .git ] || git submodule update --init --recursive
+ node cli.js rm npm -g -f
+ node cli.js cache clean
+ node cli.js install -g -f
+ /data/node/bin/npm_g -> /data/node/lib/node_modules/npm/bin/npm.js
+ /data/node/bin/npm-g -> /data/node/lib/node_modules/npm/bin/npm.js
+ /data/node/bin/npm -> /data/node/lib/node_modules/npm/bin/npm.js
+ npm@1.0.27 /data/node/lib/node_modules/npm 
+ It worked
 
  [irocha@napoleon ~]$ npm install sqlite3 node-static
 
