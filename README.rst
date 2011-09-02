@@ -96,7 +96,7 @@ After installing R packages (command: **install.packages(c("RSQLite", "quantmod"
 Node Setup
 ----------
 
-After installing **`node.js <http://nodejs.org/>_**, install dependencies typing::
+After installing `node.js <http://nodejs.org/>_`, install dependencies typing::
 
  [irocha@napoleon ~]$ curl http://npmjs.org/install.sh | sh
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
