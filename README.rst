@@ -14,6 +14,84 @@ Dependencies
 - jqPlot
 - JQuery UI
 
+Setup
+-----
+From inside **R-trader/data** directory, create sample data base typing::
+
+ [irocha@napoleon data (master)]$ ./createsqlitedb.sh 
+ Cleaning up...
+ Extracting SQL file...
+ Generating csv from SQL file...
+ Creating SQLite3 database...
+ Removing temporary files...
+ Done.
+
+After installing R packages (command: install.packages(c("RSQLite", "quantmod"))), from inside **R-trader** base directory type::
+
+ [irocha@napoleon R-trader (master)]$ R
+
+ R version 2.12.1 (2010-12-16)
+ Copyright (C) 2010 The R Foundation for Statistical Computing
+ ISBN 3-900051-07-0
+ Platform: i686-pc-linux-gnu (32-bit)
+
+ R is free software and comes with ABSOLUTELY NO WARRANTY.
+ You are welcome to redistribute it under certain conditions.
+ Type 'license()' or 'licence()' for distribution details.
+
+   Natural language support but running in an English locale
+
+ R is a collaborative project with many contributors.
+ Type 'contributors()' for more information and
+ 'citation()' on how to cite R or R packages in publications.
+
+ Type 'demo()' for some demos, 'help()' for on-line help, or
+ 'help.start()' for an HTML browser interface to help.
+ Type 'q()' to quit R.
+
+ Loading required package: quantmod
+ Loading required package: Defaults
+ Loading required package: xts
+ Loading required package: zoo
+ Loading required package: stats
+
+ Attaching package: 'zoo' 
+
+ The following object(s) are masked from 'package:base':
+
+     as.Date
+
+ Loading required package: TTR
+ Loading required package: RSQLite
+ Loading required package: DBI
+ > test()
+
+**IMPORTANT**: remember to change your project directory inside files::
+
+ [irocha@napoleon R-trader (master)]$ more .Rprofile 
+ options(papersize="a4")
+ options(editor="emacs")
+ options(pdfviewer="evince")
+
+ .First <- function() {
+   require(quantmod)
+   require(RSQLite)
+   setwd("/home/irocha/git/R-trader")  <<< change this!
+   source("trader.r")
+ }
+ 
+ [irocha@napoleon R-trader (master)]$ more trader.r 
+ t <- function() {
+   source("trader.r")
+ }
+
+ STK <- "PETR4"
+
+ gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") { <<< change this!
+   conn <- dbConnect("SQLite", dbname)
+   ...
+
+
 Author
 ------
 Ivan Ribeiro Rocha <ivan.ribeiro@gmail.com> 
