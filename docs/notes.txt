@@ -1,7 +1,3 @@
-CURSO 2:
-
-Indicadores Avancados
-
 1)Velocidade e aceleracao de medias moveis
   - verificar se tendencia esta "saudavel"
   - melhor maneira de se verificar se a media esta subindo/descendo
