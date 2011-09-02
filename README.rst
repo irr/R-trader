@@ -87,7 +87,8 @@ After installing R packages (command: install.packages(c("RSQLite", "quantmod"))
 
  STK <- "PETR4"
 
- gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") { <<< change this!
+ # remember to change dbname! <<< SQLite sample database complete path
+ gs <- function(symbol, dbname="./data/symbols.db", limit=0, begin="", end="") { 
    conn <- dbConnect("SQLite", dbname)
    ...
 
