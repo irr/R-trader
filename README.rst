@@ -96,7 +96,7 @@ After installing R packages (command: **install.packages(c("RSQLite", "quantmod"
 Node Setup
 ----------
 
-After installing `node.js <http://nodejs.org/>`_, install all dependencies typing::
+After installing `node.js <http://nodejs.org/>`_, install node.js package manager **npm** typing::
 
  [irocha@napoleon ~]$ curl http://npmjs.org/install.sh | sh
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -123,6 +123,8 @@ After installing `node.js <http://nodejs.org/>`_, install all dependencies typin
  /data/node/bin/npm -> /data/node/lib/node_modules/npm/bin/npm.js
  npm@1.0.27 /data/node/lib/node_modules/npm 
  It worked
+
+Install **node.js** dependencies typing::
 
  [irocha@napoleon ~]$ npm install sqlite3 node-static
 
